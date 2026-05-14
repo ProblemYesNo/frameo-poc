@@ -1,0 +1,6 @@
+# generated stuff
+bin
+obj
+
+bin\\*
+obj\\*
