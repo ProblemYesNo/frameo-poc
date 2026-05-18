@@ -11,6 +11,7 @@
     "preview": "rsbuild preview"
   },
   "dependencies": {
+    "axios": "^1.16.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
@@ -30,8 +31,8 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.1"
   },
-  "engines":{
-    "npm" : "please-use-pnpm",
+  "engines": {
+    "npm": "please-use-pnpm",
     "node": ">=22.0.0",
     "pnpm": ">=11.0.0"
   }

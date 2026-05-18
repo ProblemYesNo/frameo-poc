@@ -113,9 +113,9 @@ namespace frameo_api.Services;
         {
             var seedImages = new[]
             {
-                new { Url = "https://placekitten.com/800/600", Title = "Cute Kitten 1", Tags = new[] { "cat", "cute", "kitten" } },
-                new { Url = "https://placekitten.com/801/600", Title = "Cute Kitten 2", Tags = new[] { "cat", "cute", "kitten" } },
-                new { Url = "https://placekitten.com/800/601", Title = "Cute Kitten 3", Tags = new[] { "cat", "cute", "kitten" } }
+                new { Url = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80", Title = "Mountain Landscape", Tags = new[] { "landscape", "mountain", "nature" } },
+                new { Url = "https://images.unsplash.com/photo-1495567720989-cebdbdd97913?auto=format&fit=crop&w=800&q=80", Title = "Sunset", Tags = new[] { "sky", "sunset" } },
+                new { Url = "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?auto=format&fit=crop&w=800&q=80", Title = "Ananas", Tags = new[] { "fruit", "tropical" } }
             };
 
             foreach (var seed in seedImages)

@@ -64,10 +64,26 @@ public sealed class WebSocketHub
        var buffer = new byte[1024];
        while (socket.State == WebSocketState.Open)
        {
-           var result = await socket.ReceiveAsync(buffer, CancellationToken.None);
-           if (result.MessageType == WebSocketMessageType.Close)
+           try
            {
-               await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed", CancellationToken.None);
+               var result = await socket.ReceiveAsync(buffer, CancellationToken.None);
+               if (result.MessageType == WebSocketMessageType.Close)
+               {
+                   await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed", CancellationToken.None);
+                   break;
+               }
+           }
+           catch (WebSocketException)
+           {
+               // Remote closed the connection unexpectedly.
+               break;
+           }
+           catch (OperationCanceledException)
+           {
+               break;
+           }
+           catch
+           {
                break;
            }
        }
