@@ -1,8 +1,14 @@
-# Rsbuild project
+# Frameo web-client
+
+## Prerequisite
+
+- Node.js 22 or later
+- pnpm 11 or later
+- The Frameo API running at `http://localhost:5295`
 
 ## Setup
 
-Install the dependencies:
+From the `frameo-web-client` folder, install dependencies:
 
 ```bash
 pnpm install
@@ -10,27 +16,28 @@ pnpm install
 
 ## Get started
 
-Start the dev server, and the app will be available at [http://localhost:3000](http://localhost:3000).
+Start the development server:
 
 ```bash
 pnpm run dev
 ```
 
-Build the app for production:
+Open the app at:
+
+- http://localhost:3000
+
+The app loads images from the API and connects to the websocket at `/ws` for live updates.
+
+## Build / Preview
+
+Build the production bundle:
 
 ```bash
 pnpm run build
 ```
 
-Preview the production build locally:
+Preview the production build:
 
 ```bash
 pnpm run preview
 ```
-
-## Learn more
-
-To learn more about Rsbuild, check out the following resources:
-
-- [Rsbuild documentation](https://rsbuild.rs) - explore Rsbuild features and APIs.
-- [Rsbuild GitHub repository](https://github.com/web-infra-dev/rsbuild) - your feedback and contributions are welcome!

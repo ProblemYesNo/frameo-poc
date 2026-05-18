@@ -10,6 +10,7 @@ namespace frameo_api.Services;
 public sealed class WebSocketHub
 {
    private readonly ConcurrentDictionary<Guid, WebSocket> _connections = new();
+   private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
 
    public async Task AcceptSocketAsync(HttpContext context)
    {
@@ -36,7 +37,7 @@ public sealed class WebSocketHub
 
    public async Task BroadcastNewImageAsync(ImageItem image, CancellationToken cancellationToken = default)
    {
-       var payload = JsonSerializer.Serialize(new { type = "image.created", data = image });
+      var payload = JsonSerializer.Serialize(new { type = "image.created", data = image }, _jsonOptions);
        var bytes = Encoding.UTF8.GetBytes(payload);
 
        foreach (var pair in _connections)

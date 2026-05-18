@@ -13,13 +13,6 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
-
-    options.AddPolicy("frontend", policy =>
-    {
-        policy.WithOrigins("http://localhost:3000")
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
 });
 
 builder.Services.AddSingleton<ImageStore>();
@@ -27,8 +20,8 @@ builder.Services.AddSingleton<WebSocketHub>();
 
 var app = builder.Build();
 
-app.UseCors("frontend");
 app.UseWebSockets();
+app.UseCors();
 
 // Make the uploads directory exist on startup 
 var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "uploads");

@@ -11,12 +11,12 @@ type ImageItem = {
 };
 
 type SocketEvent = {
-  type: "image.created";
+  type: 'image.created';
   data: ImageItem;
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5295";
-const WS_BASE = API_BASE.replace(/^http/, "ws");
+const API_BASE = 'http://localhost:5295';
+const WS_BASE = API_BASE.replace(/^http/, 'ws');
 
 const prependIfMissing = (
   items: ImageItem[],
@@ -31,96 +31,177 @@ const prependIfMissing = (
 
 function App() {
   const [images, setImages] = useState<ImageItem[]>([]);
-  const [title, setTitle] = useState("");
-  const [tagsInput, setTagsInput] = useState("");
+  const [title, setTitle] = useState('');
+  const [tagsInput, setTagsInput] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [selectedTag, setSelectedTag] = useState("");
+  const [selectedTag, setSelectedTag] = useState('');
   const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
+  // Fetch initial images on mount
   useEffect(() => {
     const fetchImages = async () => {
       try {
         const response = await axios.get<ImageItem[]>(`${API_BASE}/api/images`);
         setImages(response.data);
       } catch {
-        setError("Could not load feed from API.");
+        setError('Could not load feed from API.');
       }
     };
 
-    fetchImages().catch(() => setError("Could not load feed from API."));
+    fetchImages().catch(() => setError('Could not load feed from API.'));
   }, []);
 
-    useEffect(() => {
-    const socket = new WebSocket(`${WS_BASE}/ws`);
+  // Establish websocket connection for live updates
+  useEffect(() => {
+    let socket: WebSocket | null = null;
+    let connectTimer: ReturnType<typeof setTimeout> | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let active = true;
 
-    socket.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data) as SocketEvent;
-        if (payload.type !== "image.created") return;
-
-        setImages((previous) => prependIfMissing(previous, payload.data));
-      } catch {
-        setError("Received malformed websocket payload.");
+    const clearConnectTimer = () => {
+      if (connectTimer !== null) {
+        clearTimeout(connectTimer);
+        connectTimer = null;
       }
     };
 
-    socket.onerror = () => {
-      setError("Websocket connection failed.");
+    const clearReconnectTimer = () => {
+      if (reconnectTimer !== null) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
     };
 
-    return () => socket.close();
+    const closeSocket = () => {
+      if (socket && socket.readyState < WebSocket.CLOSED) {
+        socket.close();
+      }
+      socket = null;
+    };
+
+    const connectWebSocket = () => {
+      if (!active) return;
+
+      closeSocket();
+
+      try {
+        socket = new WebSocket(`${WS_BASE}/ws`);
+
+        socket.onopen = () => {
+          console.log('WebSocket connected');
+          setError('');
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const payload = JSON.parse(event.data) as SocketEvent;
+            if (payload.type !== 'image.created') return;
+            setImages((previous) => prependIfMissing(previous, payload.data));
+          } catch (e) {
+            console.error('Failed to parse websocket message:', e);
+            setError('Received malformed websocket payload.');
+          }
+        };
+
+        socket.onerror = (event) => {
+          if (!socket || socket.readyState > 1) return;
+          console.error('WebSocket error:', event);
+          setError('WebSocket connection error. Retrying...');
+        };
+
+        socket.onclose = () => {
+          console.log('WebSocket closed');
+          if (active) {
+            console.log('Reconnecting in 3s...');
+            clearReconnectTimer();
+            reconnectTimer = setTimeout(() => {
+              if (active) connectWebSocket();
+            }, 3000);
+          }
+        };
+      } catch (e) {
+        console.error('Failed to create WebSocket:', e);
+        setError(`WebSocket connection failed: ${String(e)}`);
+      }
+    };
+
+    const scheduleConnect = (delay = 0) => {
+      if (!active) return;
+      clearConnectTimer();
+      connectTimer = setTimeout(() => {
+        if (!active) return;
+        connectWebSocket();
+      }, delay);
+    };
+
+    scheduleConnect();
+
+    return () => {
+      active = false;
+      clearConnectTimer();
+      clearReconnectTimer();
+      closeSocket();
+    };
   }, []);
 
   const uniqueTags = useMemo(() => {
-    return [...new Set(images.flatMap((item) => item.tags))].sort((a, b) =>
-      a.localeCompare(b),
-    );
+    return [
+      ...new Set(
+        images
+          .flatMap((item) => item.tags || [])
+          .filter((tag) => typeof tag === 'string' && tag.trim().length > 0),
+      ),
+    ].sort((a, b) => a.localeCompare(b));
   }, [images]);
 
   const visibleImages = useMemo(() => {
     if (!selectedTag) return images;
-    return images.filter((item) => item.tags.includes(selectedTag));
+    return images.filter((item) => {
+      const tags = item.tags || (item as ImageItem).tags || [];
+      return tags.includes(selectedTag);
+    });
   }, [images, selectedTag]);
 
   const onSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!file) {
-      setError("Please choose an image to upload.");
+      setError('Please choose an image to upload.');
       return;
     }
 
-    setError("");
+    setError('');
     setIsUploading(true);
 
     const formData = new FormData();
-    formData.append("title", title);
-    formData.append("tags", tagsInput);
-    formData.append("image", file);
+    formData.append('title', title);
+    formData.append('tags', tagsInput);
+    formData.append('image', file);
 
     try {
       const response = await axios.post<ImageItem>(
         `${API_BASE}/uploads`,
         formData,
       );
+      console.log('Upload response:', response.data);
       setImages((previous) => prependIfMissing(previous, response.data));
 
-      setTitle("");
-      setTagsInput("");
+      setTitle('');
+      setTagsInput('');
       setFile(null);
       const input = document.getElementById(
-        "image-file",
+        'image-file',
       ) as HTMLInputElement | null;
-      if (input) input.value = "";
+      if (input) input.value = '';
     } catch (uploadError: unknown) {
       if (axios.isAxiosError(uploadError)) {
         const apiMessage = (
           uploadError.response?.data as { error?: string } | undefined
         )?.error;
-        setError(apiMessage ?? "Upload failed. Please try again.");
+        setError(apiMessage ?? 'Upload failed. Please try again.');
       } else {
-        setError("Upload failed. Please try again.");
+        setError('Upload failed. Please try again.');
       }
     } finally {
       setIsUploading(false);
@@ -195,7 +276,7 @@ function App() {
               disabled={isUploading}
               className="w-full rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:bg-slate-500"
             >
-              {isUploading ? "Uploading..." : "Upload Image"}
+              {isUploading ? 'Uploading...' : 'Upload Image'}
             </button>
 
             {error && (
@@ -211,7 +292,7 @@ function App() {
                 <h2 className="text-xl font-bold text-slate-900">Feed</h2>
                 {selectedTag && (
                   <button
-                    onClick={() => setSelectedTag("")}
+                    onClick={() => setSelectedTag('')}
                     className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700"
                   >
                     Clear Filter
@@ -226,8 +307,8 @@ function App() {
                     onClick={() => setSelectedTag(tag)}
                     className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                       selectedTag === tag
-                        ? "bg-slate-900 text-white"
-                        : "border border-slate-300 bg-white text-slate-700 hover:border-cyan-600 hover:text-cyan-700"
+                        ? 'bg-slate-900 text-white'
+                        : 'border border-slate-300 bg-white text-slate-700 hover:border-cyan-600 hover:text-cyan-700'
                     }`}
                   >
                     #{tag}
@@ -237,38 +318,48 @@ function App() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {visibleImages.map((image) => (
-                <article
-                  key={image.id}
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
-                >
-                  <img
-                    src={
-                      image.url.startsWith("http://") || image.url.startsWith("https://")
-                        ? image.url
-                        : `${API_BASE}${image.url}`
-                    }
-                    alt={image.title}
-                    className="h-52 w-full object-cover"
-                    loading="lazy"
-                  />
-                  <div className="space-y-3 p-4">
-                    <h3 className="text-lg font-bold text-slate-900">
-                      {image.title}
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {(image.tags ?? []).map((tag) => (
-                        <span
-                          key={`${image.id}-${tag}`}
-                          className="rounded-full bg-cyan-100 px-2 py-1 text-xs font-semibold text-cyan-700"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
+              {visibleImages.map((image) => {
+                if (!image || !image.url) {
+                  console.warn('Invalid image data:', image);
+                  return null;
+                }
+
+                const isExternalUrl =
+                  image.url.startsWith('http://') ||
+                  image.url.startsWith('https://');
+                const imageSrc = isExternalUrl
+                  ? image.url
+                  : `${API_BASE}${image.url}`;
+
+                return (
+                  <article
+                    key={image.id}
+                    className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                  >
+                    <img
+                      src={imageSrc}
+                      alt={image.title}
+                      className="h-52 w-full object-cover"
+                      loading="lazy"
+                    />
+                    <div className="space-y-3 p-4">
+                      <h3 className="text-lg font-bold text-slate-900">
+                        {image.title}
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {(image.tags ?? []).map((tag) => (
+                          <span
+                            key={`${image.id}-${tag}`}
+                            className="rounded-full bg-cyan-100 px-2 py-1 text-xs font-semibold text-cyan-700"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
 
             {visibleImages.length === 0 && (
@@ -281,6 +372,6 @@ function App() {
       </div>
     </main>
   );
-};
+}
 
 export default App;
