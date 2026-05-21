@@ -15,7 +15,9 @@ type SocketEvent = {
   data: ImageItem;
 };
 
-const API_BASE = 'http://localhost:5295';
+const API_BASE =
+  import.meta.env.API_BASE?.toString().trim() ||
+  'http://localhost:5295';
 const WS_BASE = API_BASE.replace(/^http/, 'ws');
 
 const prependIfMissing = (
@@ -317,7 +319,7 @@ function App() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="flex flex-col flex-wrap gap-4">
               {visibleImages.map((image) => {
                 if (!image || !image.url) {
                   console.warn('Invalid image data:', image);
@@ -339,7 +341,7 @@ function App() {
                     <img
                       src={imageSrc}
                       alt={image.title}
-                      className="h-52 w-full object-cover"
+                      className="h-full w-full aspect-w-16 aspect-h-9"
                       loading="lazy"
                     />
                     <div className="space-y-3 p-4">

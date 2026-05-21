@@ -1,0 +1,31 @@
+.git
+*.log
+*.md
+
+# Ignore bin,obj
+bin
+obj
+
+# Ignore user-specific OS-specific and IDE files
+.vs/
+.vscode/
+.idea/
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Ignore build and package directories
+/build
+*.nupkg
+*.dll
+*.exe
+*.pdb
+*.cache
+
+# Ignore dotnet restore and publish files
+/publish/
+/packages/

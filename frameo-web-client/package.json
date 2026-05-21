@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "rsbuild --open",
     "build": "rsbuild build",
-    "dev": "rsbuild --open",
-    "preview": "rsbuild preview",
+    "build:prod": "rsbuild release",
     "format": "prettier --check --config .prettierrc --ignore-path .prettierignore .",
     "format:fix": "prettier --write --config .prettierrc --ignore-path .prettierignore .",
     "lint": "eslint -c eslint.config.mjs .",
@@ -35,7 +35,7 @@
   },
   "engines": {
     "npm": "please-use-pnpm",
-    "node": ">=22.0.0",
+    "node": ">=24.0.0",
     "pnpm": ">=11.0.0"
   }
 }
