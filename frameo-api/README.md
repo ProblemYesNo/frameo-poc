@@ -15,6 +15,25 @@ dotnet restore
 
 ## Get started
 
+### Option 1: Docker / Podman
+
+From the project root:
+
+```bash
+podman compose up --build api
+```
+
+Or with Docker:
+
+```bash
+docker compose up --build api
+```
+
+The API will be available at:
+- http://localhost:5295
+
+### Option 2: Local development
+
 Run the API from the `frameo-api` folder:
 
 ```bash

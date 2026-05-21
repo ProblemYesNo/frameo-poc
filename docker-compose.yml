@@ -1,0 +1,18 @@
+services:
+  api:
+    build:
+      context: ./frameo-api
+      dockerfile: Dockerfile
+    ports:
+      - "5295:5295"
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:5295
+
+  web:
+    build:
+      context: ./frameo-web-client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api

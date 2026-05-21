@@ -16,6 +16,25 @@ pnpm install
 
 ## Get started
 
+### Option 1: Docker / Podman
+
+From the project root:
+
+```bash
+podman compose up --build web
+```
+
+Or with Docker:
+
+```bash
+docker compose up --build web
+```
+
+The web client will be available at:
+- http://localhost:3000
+
+### Option 2: Local development
+
 Start the development server:
 
 ```bash
@@ -41,3 +60,13 @@ Preview the production build:
 ```bash
 pnpm run preview
 ```
+
+## Docker build arguments
+
+When building with Docker/Podman, you can customize the API base URL:
+
+```bash
+podman build --build-arg API_BASE="http://api.example.com:5295" -t frameo-web .
+```
+
+The `API_BASE` defaults to `http://localhost:5295` if not specified.

@@ -3,7 +3,8 @@ using frameo_api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseUrls("http://localhost:5295", "https://localhost:7276");
+var urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://0.0.0.0:5295";
+builder.WebHost.UseUrls(urls);
 
 builder.Services.AddCors(options =>
 {

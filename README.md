@@ -16,6 +16,26 @@ This repository contains two projects:
 
 ## Get started
 
+### Option 1: Docker / Podman (Recommended)
+
+From the project root:
+
+```bash
+podman compose up --build
+```
+
+Or with Docker:
+
+```bash
+docker compose up --build
+```
+
+The services will be available at:
+- API: http://localhost:5295
+- Web client: http://localhost:3000
+
+### Option 2: Local development
+
 1. Start the API:
 
 ```bash
@@ -45,3 +65,5 @@ The web client should be available at:
 
 - The web client expects the API to be running at `http://localhost:5295` by default.
 - Image uploads are stored in the API `uploads/` folder automatically.
+- Both the API and web client have Dockerfiles for containerized deployment.
+- When running via `podman compose` or `docker compose`, the API is automatically accessible to the web client via the service name.
